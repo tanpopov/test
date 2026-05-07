@@ -1,9 +1,10 @@
 export type Product = {
   id: string;
   name: string;
-  category: string;
-  appeal: string;
+  genre: string;
+  concern: string;
   affiliateUrl: string;
+  memo: string;
 };
 
 export type ThemeInput = {
@@ -14,9 +15,13 @@ export type ThemeInput = {
 };
 
 export type GeneratedDraft = {
-  carousel: string[];
+  carousel: {
+    title: string;
+    body: string;
+  }[];
   imagePrompts: string[];
   caption: string;
   cta: string;
-  linkCandidates: Product[];
+  affiliateLink: Product | null;
+  prLabel: string;
 };

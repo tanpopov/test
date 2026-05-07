@@ -3,46 +3,58 @@
 import { useEffect, useMemo, useState } from "react";
 import { GeneratedDraft, Product, ThemeInput } from "@/lib/types";
 
-const PRODUCTS_KEY = "insta_aff_products_v1";
+const PRODUCTS_KEY = "insta_aff_products_v2";
 const THEME_KEY = "insta_aff_theme_v1";
+const PR_LABEL = "※アフィリエイト広告を利用しています";
 
 const initialTheme: ThemeInput = {
   theme: "",
-  target: "",
+  target: "30代女性",
   postGoal: "保存される投稿にしたい",
-  tone: "やさしく親しみやすい",
+  tone: "中学生でもわかる、やさしい言葉",
 };
 
+const emptyProduct: Product = { id: "", name: "", genre: "", concern: "", affiliateUrl: "", memo: "" };
+
 function generateDraft(themeInput: ThemeInput, products: Product[]): GeneratedDraft {
-  const t = themeInput.theme || "野菜をおいしく食べるコツ";
-  const target = themeInput.target || "料理初心者";
+  const theme = themeInput.theme || "野菜をムダなくおいしく使うコツ";
+  const target = themeInput.target || "料理に忙しい30代女性";
+  const picked = products[0] ?? null;
 
   const carousel = [
-    `1枚目: ${t}で損してる人が多い`,
-    `2枚目: ${target}がやりがちな失敗3つ`,
-    "3枚目: 正しい手順を画像で解説",
-    "4枚目: 時短できるコツ",
-    "5枚目: まとめ（保存推奨）",
+    { title: "1枚目：フック", body: `${theme}、なんとなくでやっていませんか？` },
+    { title: "2枚目：よくある失敗", body: `${target}がやりがちなのは、自己流で保存や下ごしらえをしてしまうこと。` },
+    { title: "3枚目：原因", body: "原因は、手順がむずかしそうに見えて後回しになることです。" },
+    { title: "4枚目：解決策", body: "手順を3つに分ければ簡単。切る→保存する→使うの順で考えるだけ。" },
+    { title: "5枚目：保存CTA＋商品導線", body: `この投稿を保存して次の買い物前に見返してね。${picked ? `使いやすい${picked.name}は最後に紹介します。` : "使いやすい調理アイテムは最後に紹介します。"}` },
   ];
 
   const imagePrompts = carousel.map(
     (slide, i) =>
-      `Japanese home kitchen, fresh vegetables, instagram carousel slide ${i + 1}, ${slide}, natural light, clean composition, high detail`,
+      `Instagram carousel slide ${i + 1}, Japanese home kitchen, fresh vegetables, ${slide.title}, ${slide.body}, soft natural light, clean composition, readable typography space`,
   );
 
-  const caption = `${t}をわかりやすくまとめました🥕\n\n${target}でも今日から実践できる内容です。\n保存して買い物前・調理前に見返してください！\n\n#野菜レシピ #料理初心者 #時短ごはん #自炊`;
+  const cta = "続きはプロフィールのリンクから、使いやすいアイテムをチェックしてください。";
 
-  const cta = "気になったアイテムはプロフィールのリンクからチェック👇";
+  const caption = [
+    `${theme}について、やさしく5枚でまとめました。`,
+    "まずは毎日の料理の悩みを軽くすることを大事にしています。",
+    "むずかしいテクニックではなく、今日からできる方法だけを紹介しています。",
+    "よかったら保存して、調理前に見返してください。",
+    picked ? `最後に、同じ悩みに合いやすい「${picked.name}」も紹介しています。` : "最後に、関連アイテムも紹介しています。",
+    PR_LABEL,
+    "#野菜レシピ #時短ごはん #自炊 #料理初心者",
+  ].join("\n\n");
 
-  const linkCandidates = products.slice(0, 3);
-
-  return { carousel, imagePrompts, caption, cta, linkCandidates };
+  return { carousel, imagePrompts, caption, cta, affiliateLink: picked, prLabel: PR_LABEL };
 }
 
 export default function Page() {
   const [themeInput, setThemeInput] = useState<ThemeInput>(initialTheme);
   const [products, setProducts] = useState<Product[]>([]);
   const [draft, setDraft] = useState<GeneratedDraft | null>(null);
+  const [productForm, setProductForm] = useState<Product>(emptyProduct);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   useEffect(() => {
     const productText = localStorage.getItem(PRODUCTS_KEY);
@@ -51,93 +63,91 @@ export default function Page() {
     if (themeText) setThemeInput(JSON.parse(themeText));
   }, []);
 
-  useEffect(() => {
-    localStorage.setItem(PRODUCTS_KEY, JSON.stringify(products));
-  }, [products]);
-
-  useEffect(() => {
-    localStorage.setItem(THEME_KEY, JSON.stringify(themeInput));
-  }, [themeInput]);
-
-  const [productForm, setProductForm] = useState<Product>({
-    id: "",
-    name: "",
-    category: "",
-    appeal: "",
-    affiliateUrl: "",
-  });
+  useEffect(() => localStorage.setItem(PRODUCTS_KEY, JSON.stringify(products)), [products]);
+  useEffect(() => localStorage.setItem(THEME_KEY, JSON.stringify(themeInput)), [themeInput]);
 
   const canGenerate = useMemo(() => themeInput.theme.trim().length > 0, [themeInput.theme]);
 
-  return (
-    <main className="mx-auto max-w-4xl p-4 pb-16 sm:p-6">
-      <h1 className="mb-4 text-2xl font-bold">Instagramアフィリエイト投稿メーカー（最小版）</h1>
-      <p className="mb-6 text-sm text-slate-600">4ステップで投稿下書きを作成し、最後にまとめてコピーできます。</p>
+  const handleSaveProduct = () => {
+    if (!productForm.name.trim()) return;
+    if (editingId) {
+      setProducts(products.map((p) => (p.id === editingId ? { ...productForm, id: editingId } : p)));
+      setEditingId(null);
+    } else {
+      setProducts([...products, { ...productForm, id: crypto.randomUUID() }]);
+    }
+    setProductForm(emptyProduct);
+  };
 
-      <section className="mb-4 rounded-xl bg-white p-4 shadow-sm">
+  const carouselText = draft?.carousel.map((s) => `${s.title}\n${s.body}`).join("\n\n") ?? "";
+  const promptText = draft?.imagePrompts.join("\n") ?? "";
+  const allText = draft
+    ? `【カルーセル5枚構成】\n${carouselText}\n\n【画像生成プロンプト】\n${promptText}\n\n【Instagramキャプション】\n${draft.caption}\n\n【CTA】\n${draft.cta}\n\n【使用するアフィリエイトリンク】\n${draft.affiliateLink ? `${draft.affiliateLink.name}: ${draft.affiliateLink.affiliateUrl}` : "未選択"}\n\n【PR表記】\n${draft.prLabel}`
+    : "";
+
+  return (
+    <main className="mx-auto max-w-4xl space-y-4 p-3 pb-16 sm:p-6">
+      <h1 className="text-2xl font-bold">Instagramアフィリエイト投稿メーカー</h1>
+
+      <section className="rounded-xl bg-white p-4 shadow-sm">
         <h2 className="mb-3 text-lg font-semibold">1. 投稿テーマ入力</h2>
-        <div className="grid gap-3 sm:grid-cols-2">
-          <input className="rounded-lg border p-2" placeholder="投稿テーマ（例：ブロッコリーの冷凍保存）" value={themeInput.theme} onChange={(e) => setThemeInput({ ...themeInput, theme: e.target.value })} />
-          <input className="rounded-lg border p-2" placeholder="ターゲット（例：一人暮らしの社会人）" value={themeInput.target} onChange={(e) => setThemeInput({ ...themeInput, target: e.target.value })} />
-          <input className="rounded-lg border p-2" placeholder="投稿ゴール" value={themeInput.postGoal} onChange={(e) => setThemeInput({ ...themeInput, postGoal: e.target.value })} />
-          <input className="rounded-lg border p-2" placeholder="文体トーン" value={themeInput.tone} onChange={(e) => setThemeInput({ ...themeInput, tone: e.target.value })} />
+        <div className="grid gap-2 sm:grid-cols-2">
+          <input className="rounded-lg border p-3" placeholder="投稿テーマ" value={themeInput.theme} onChange={(e) => setThemeInput({ ...themeInput, theme: e.target.value })} />
+          <input className="rounded-lg border p-3" placeholder="ターゲット" value={themeInput.target} onChange={(e) => setThemeInput({ ...themeInput, target: e.target.value })} />
+          <input className="rounded-lg border p-3" placeholder="投稿ゴール" value={themeInput.postGoal} onChange={(e) => setThemeInput({ ...themeInput, postGoal: e.target.value })} />
+          <input className="rounded-lg border p-3" placeholder="文体トーン" value={themeInput.tone} onChange={(e) => setThemeInput({ ...themeInput, tone: e.target.value })} />
         </div>
       </section>
 
-      <section className="mb-4 rounded-xl bg-white p-4 shadow-sm">
+      <section className="rounded-xl bg-white p-4 shadow-sm">
         <h2 className="mb-3 text-lg font-semibold">2. アフィリエイト商品登録</h2>
         <div className="grid gap-2 sm:grid-cols-2">
-          <input className="rounded-lg border p-2" placeholder="商品名" value={productForm.name} onChange={(e) => setProductForm({ ...productForm, name: e.target.value })} />
-          <input className="rounded-lg border p-2" placeholder="カテゴリ" value={productForm.category} onChange={(e) => setProductForm({ ...productForm, category: e.target.value })} />
-          <input className="rounded-lg border p-2" placeholder="訴求ポイント" value={productForm.appeal} onChange={(e) => setProductForm({ ...productForm, appeal: e.target.value })} />
-          <input className="rounded-lg border p-2" placeholder="アフィリエイトURL" value={productForm.affiliateUrl} onChange={(e) => setProductForm({ ...productForm, affiliateUrl: e.target.value })} />
+          <input className="rounded-lg border p-3" placeholder="商品名" value={productForm.name} onChange={(e) => setProductForm({ ...productForm, name: e.target.value })} />
+          <input className="rounded-lg border p-3" placeholder="ジャンル" value={productForm.genre} onChange={(e) => setProductForm({ ...productForm, genre: e.target.value })} />
+          <input className="rounded-lg border p-3" placeholder="悩み" value={productForm.concern} onChange={(e) => setProductForm({ ...productForm, concern: e.target.value })} />
+          <input className="rounded-lg border p-3" placeholder="アフィリエイトURL" value={productForm.affiliateUrl} onChange={(e) => setProductForm({ ...productForm, affiliateUrl: e.target.value })} />
+          <textarea className="rounded-lg border p-3 sm:col-span-2" placeholder="メモ" value={productForm.memo} onChange={(e) => setProductForm({ ...productForm, memo: e.target.value })} />
         </div>
-        <button
-          className="mt-3 rounded-lg bg-emerald-600 px-4 py-2 text-white"
-          onClick={() => {
-            if (!productForm.name.trim()) return;
-            setProducts([...products, { ...productForm, id: crypto.randomUUID() }]);
-            setProductForm({ id: "", name: "", category: "", appeal: "", affiliateUrl: "" });
-          }}
-        >
-          商品を追加
-        </button>
-        <ul className="mt-3 space-y-2 text-sm">
+        <button className="mt-3 w-full rounded-lg bg-emerald-600 px-4 py-3 text-white sm:w-auto" onClick={handleSaveProduct}>{editingId ? "商品を更新" : "商品を追加"}</button>
+
+        <ul className="mt-4 space-y-2">
           {products.map((p) => (
-            <li key={p.id} className="rounded border p-2">
-              <div className="font-medium">{p.name}</div>
-              <div className="text-slate-600">{p.category} / {p.appeal}</div>
+            <li key={p.id} className="rounded-lg border p-3 text-sm">
+              <p className="font-semibold">{p.name}</p>
+              <p>ジャンル: {p.genre}</p>
+              <p>悩み: {p.concern}</p>
+              <p className="break-all">URL: {p.affiliateUrl}</p>
+              <p className="text-slate-600">メモ: {p.memo || "-"}</p>
+              <div className="mt-2 flex gap-2">
+                <button className="rounded bg-slate-800 px-3 py-2 text-white" onClick={() => { setEditingId(p.id); setProductForm(p); }}>編集</button>
+                <button className="rounded bg-rose-600 px-3 py-2 text-white" onClick={() => { if (window.confirm("この商品を削除しますか？")) setProducts(products.filter((x) => x.id !== p.id)); }}>削除</button>
+              </div>
             </li>
           ))}
         </ul>
       </section>
 
-      <section className="mb-4 rounded-xl bg-white p-4 shadow-sm">
+      <section className="rounded-xl bg-white p-4 shadow-sm">
         <h2 className="mb-3 text-lg font-semibold">3. 投稿案生成</h2>
-        <button
-          disabled={!canGenerate}
-          className="rounded-lg bg-slate-900 px-4 py-2 text-white disabled:opacity-40"
-          onClick={() => setDraft(generateDraft(themeInput, products))}
-        >
-          投稿案を生成する
-        </button>
+        <button disabled={!canGenerate} className="rounded-lg bg-slate-900 px-4 py-3 text-white disabled:opacity-40" onClick={() => setDraft(generateDraft(themeInput, products))}>投稿案を生成する</button>
       </section>
 
       <section className="rounded-xl bg-white p-4 shadow-sm">
         <h2 className="mb-3 text-lg font-semibold">4. 完成投稿コピー</h2>
-        {draft ? (
-          <div className="space-y-3">
-            <textarea className="h-72 w-full rounded border p-3 text-sm" readOnly value={`【カルーセル構成】\n${draft.carousel.join("\n")}\n\n【画像生成プロンプト】\n${draft.imagePrompts.join("\n")}\n\n【キャプション】\n${draft.caption}\n\n【CTA】\n${draft.cta}\n\n【アフィリエイトリンク候補】\n${draft.linkCandidates.map((p) => `- ${p.name}: ${p.affiliateUrl}`).join("\n") || "- 候補なし"}`} />
-            <button
-              className="rounded-lg bg-emerald-600 px-4 py-2 text-white"
-              onClick={() => navigator.clipboard.writeText(`【カルーセル構成】\n${draft.carousel.join("\n")}\n\n【画像生成プロンプト】\n${draft.imagePrompts.join("\n")}\n\n【キャプション】\n${draft.caption}\n\n【CTA】\n${draft.cta}\n\n【アフィリエイトリンク候補】\n${draft.linkCandidates.map((p) => `- ${p.name}: ${p.affiliateUrl}`).join("\n") || "- 候補なし"}`)}
-            >
-              全文をコピー
-            </button>
+        {draft ? <div className="space-y-4 text-sm">
+          <div><h3 className="font-semibold">カルーセル5枚構成</h3>{draft.carousel.map((s) => <p key={s.title} className="mt-1"><strong>{s.title}</strong> {s.body}</p>)}</div>
+          <div><h3 className="font-semibold">各スライドの画像生成プロンプト</h3><pre className="overflow-x-auto rounded border bg-slate-50 p-2">{promptText}</pre></div>
+          <div><h3 className="font-semibold">Instagramキャプション</h3><pre className="whitespace-pre-wrap rounded border bg-slate-50 p-2">{draft.caption}</pre></div>
+          <div><h3 className="font-semibold">CTA</h3><p>{draft.cta}</p></div>
+          <div><h3 className="font-semibold">使用するアフィリエイトリンク</h3><p className="break-all">{draft.affiliateLink ? `${draft.affiliateLink.name}: ${draft.affiliateLink.affiliateUrl}` : "未選択"}</p></div>
+          <div><h3 className="font-semibold">PR表記</h3><p>{draft.prLabel}</p></div>
+          <div className="grid gap-2 sm:grid-cols-2">
+            <button className="rounded bg-emerald-700 px-3 py-2 text-white" onClick={() => navigator.clipboard.writeText(carouselText)}>カルーセル文字だけコピー</button>
+            <button className="rounded bg-emerald-700 px-3 py-2 text-white" onClick={() => navigator.clipboard.writeText(promptText)}>画像生成プロンプトだけコピー</button>
+            <button className="rounded bg-emerald-700 px-3 py-2 text-white" onClick={() => navigator.clipboard.writeText(draft.caption)}>キャプションだけコピー</button>
+            <button className="rounded bg-emerald-700 px-3 py-2 text-white" onClick={() => navigator.clipboard.writeText(allText)}>全部まとめてコピー</button>
           </div>
-        ) : (
-          <p className="text-sm text-slate-500">先に「投稿案を生成する」を押してください。</p>
-        )}
+        </div> : <p className="text-sm text-slate-500">先に投稿案を生成してください。</p>}
       </section>
     </main>
   );
