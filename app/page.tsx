@@ -74,12 +74,9 @@ function generateDraft(themeInput: ThemeInput, products: Product[]): GeneratedDr
     carousel = [
       { title: "1枚目：フック", body: `${vegetable}
 切り方で甘い` },
-      { title: "2枚目：よくある失敗", body: "細く切るほど
-火が通りやすい" },
-      { title: "3枚目：原因", body: "繊維を断つと
-食感がやわらぐ" },
-      { title: "4枚目：解決策", body: "芯は薄切り
-葉はざく切り" },
+      { title: "2枚目：よくある失敗", body: "細く切るほど\n火が通りやすい" },
+      { title: "3枚目：原因", body: "繊維を断つと\n食感がやわらぐ" },
+      { title: "4枚目：解決策", body: "芯は薄切り\n葉はざく切り" },
       { title: "5枚目：保存CTA＋商品導線", body: picked ? `あとで保存
 切り方で変わる` : `あとで保存
 切り方で変わる` },
@@ -88,12 +85,9 @@ function generateDraft(themeInput: ThemeInput, products: Product[]): GeneratedDr
     carousel = [
       { title: "1枚目：フック", body: `${vegetable}
 傷みやすい理由` },
-      { title: "2枚目：よくある失敗", body: "その保存NG
-劣化が早い" },
-      { title: "3枚目：原因", body: "水分と温度差で
-傷みが進む" },
-      { title: "4枚目：解決策", body: "乾かして小分け
-冷蔵を一定に" },
+      { title: "2枚目：よくある失敗", body: "その保存NG\n劣化が早い" },
+      { title: "3枚目：原因", body: "水分と温度差で\n傷みが進む" },
+      { title: "4枚目：解決策", body: "乾かして小分け\n冷蔵を一定に" },
       { title: "5枚目：保存CTA＋商品導線", body: `${vegetable}対策を保存
 最後に道具を紹介` },
     ];
@@ -105,8 +99,7 @@ ${intent.purpose}` },
 仕上がりが変わる` },
       { title: "3枚目：原因", body: `${intent.worry}
 小さな差が出る` },
-      { title: "4枚目：解決策", body: "手順をそろえる
-食感をそろえる" },
+      { title: "4枚目：解決策", body: "手順をそろえる\n食感をそろえる" },
       { title: "5枚目：保存CTA＋商品導線", body: `あとで保存
 ${intent.purpose}` },
     ];
