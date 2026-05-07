@@ -155,7 +155,7 @@ export default function Page() {
       <section className="rounded-xl bg-white p-4 shadow-sm">
         <h2 className="mb-3 text-lg font-semibold">4. 完成投稿コピー</h2>
         {draft ? <div className="space-y-4 text-sm">
-          <div className="rounded-lg border bg-slate-50 p-3"><h3 className="font-semibold">カルーセル5枚構成</h3>{draft.carousel.map((s) => <p key={s.title} className="mt-2 whitespace-pre-line"><strong>{s.title}</strong>\n{s.body}</p>)}</div>
+          <div className="rounded-lg border bg-slate-50 p-3"><h3 className="font-semibold">カルーセル5枚構成</h3>{draft.carousel.map((s) => (<div key={s.title} className="mt-2 whitespace-pre-line"><p className="font-semibold">{s.title}</p><p>{s.body}</p></div>))}</div>
           <div className="rounded-lg border bg-slate-50 p-3">
             <h3 className="font-semibold">画像生成プロンプト</h3>
             <div className="mt-2 space-y-3">
