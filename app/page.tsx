@@ -18,6 +18,14 @@ const emptyProduct: Product = { id: "", name: "", genre: "", concern: "", affili
 
 const isHttpsUrl = (url: string) => url.trim().startsWith("https://");
 
+
+const buildPrompt = (slideNumber: number, scene: string, lines: string[]) => [
+  `Instagram carousel slide ${slideNumber}, ${scene}`,
+  `vertical 4:5, 1080x1350, ultra realistic, realistic Japanese home kitchen, natural warm light or warm cinematic light, clean composition, clear main subject, text space, high readability, friendly for Japanese women in their 30s`,
+  `bold Japanese text, extremely large white text, thick black outline:`,
+  ...lines.map((line) => `「${line}」`),
+].join("\n");
+
 function generateDraft(themeInput: ThemeInput, products: Product[]): GeneratedDraft {
   const rawTheme = themeInput.theme.trim();
   const picked = products[0] ?? null;
@@ -111,20 +119,22 @@ ${intent.purpose}` },
 
   const imagePrompts = isCabbageTheme
     ? [
-        `Instagram carousel slide 1, close-up of fresh ${vegetable} cut surface on cutting board, kitchen knife beside it, realistic Japanese home kitchen, natural warm light, clean composition, strong scroll-stopping visual\nbold Japanese text:\n「${vegetable}」\n「切り方で甘さ変わる」\nhigh readability, vertical 4:5, typography space, friendly for Japanese women in their 30s`,
-        `Instagram carousel slide 2, cabbage cut too thin and starting to look watery on a cutting board, repeating same cut style, clear failure visual, realistic Japanese home kitchen, natural light, clean composition\nbold Japanese text:\n「全部細切り」\n「ベチャつきやすい」\nhigh readability, vertical 4:5, typography space, friendly for Japanese women in their 30s`,
-        `Instagram carousel slide 3, comparison of cabbage core and leaves, clear thickness difference and heat penetration contrast, realistic cabbage, educational cooking visual, clean kitchen background\nbold Japanese text:\n「繊維を断つと」\n「火が入りやすい」\nhigh readability, vertical 4:5, typography space, friendly for Japanese women in their 30s`,
-        `Instagram carousel slide 4, thick cabbage parts sliced thin and leaves roughly chopped in two clear piles on cutting board, practical cooking tip visual, realistic Japanese kitchen\nbold Japanese text:\n「芯は薄切り」\n「葉はざく切り」\nhigh readability, vertical 4:5, typography space, friendly for Japanese women in their 30s`,
-        `Instagram carousel slide 5, neatly arranged cut cabbage ready for cooking, thin-sliced thick parts and rough-chopped leaves aligned beautifully, save-worthy organized kitchen finish\nbold Japanese text:\n「あとで保存」\n「切り方で変わる」\nhigh readability, vertical 4:5, typography space, friendly for Japanese women in their 30s`,
+        buildPrompt(1, `close-up of fresh ${vegetable} cut surface on cutting board, kitchen knife beside it, strong scroll-stopping hook visual`, [vegetable, "切り方で甘さ変わる"]),
+        buildPrompt(2, `cabbage cut too thin and starting to look watery on a cutting board, repeating same cut style, clear mistake visual`, ["全部細切り", "ベチャつきやすい"]),
+        buildPrompt(3, `comparison of cabbage core and leaves, clear thickness difference and heat penetration contrast, educational cooking visual`, ["繊維を断つと", "火が入りやすい"]),
+        buildPrompt(4, `thick cabbage parts sliced thin and leaves roughly chopped in two clear piles on cutting board, practical cooking tip demonstration`, ["芯は薄切り", "葉はざく切り"]),
+        buildPrompt(5, `neatly arranged cut cabbage ready for cooking, thin-sliced thick parts and rough-chopped leaves aligned beautifully, save-worthy finish`, ["あとで保存", "切り方で変わる"]),
       ]
     : carousel.map((slide, i) => {
-        const slideTexts = slide.body.split("\n").map((line) => `「${line}」`).join("\n");
-        return [
-          `Instagram carousel slide ${i + 1}, ${visualHint}, realistic ${vegetable}, natural light, clean composition`,
-          `bold Japanese text:`,
-          slideTexts,
-          `high readability, vertical 4:5, typography space, friendly for Japanese women in their 30s`,
-        ].join("\n");
+        const lines = slide.body.split("\n");
+        const sceneByRole = [
+          `${vegetable} hero shot for hook, strong focus composition`,
+          `${vegetable} common mistake moment in cooking prep`,
+          `${vegetable} cause explanation visual with clear comparison`,
+          `${vegetable} actionable solution demonstration on cutting board`,
+          `${vegetable} finished prep scene for save CTA and product lead-in`,
+        ];
+        return buildPrompt(i + 1, sceneByRole[i] || `${vegetable} cooking scene`, lines);
       });
 
   const cta = isCabbageTheme
@@ -247,13 +257,13 @@ export default function Page() {
         {draft ? <div className="space-y-4 text-sm">
           <div className="rounded-lg border bg-slate-50 p-3"><h3 className="font-semibold">カルーセル5枚構成</h3>{draft.carousel.map((s) => (<div key={s.title} className="mt-2 whitespace-pre-line"><p className="font-semibold">{s.title}</p><p>{s.body}</p></div>))}</div>
           <div className="rounded-lg border bg-slate-50 p-3">
-            <h3 className="font-semibold">画像生成プロンプト</h3>
+            <div className="flex items-center justify-between gap-2"><h3 className="font-semibold">画像生成プロンプト</h3><button className="rounded bg-slate-800 px-2 py-1 text-xs text-white" onClick={() => navigator.clipboard.writeText(promptText.split("\n\n").join("\n\n---\n\n"))}>5枚分の画像プロンプトを全部コピー</button></div>
             <div className="mt-2 space-y-3">
               {draft.imagePrompts.map((prompt, i) => (
                 <div key={`prompt-${i}`} className="rounded border bg-white p-2">
                   <div className="mb-1 flex items-center justify-between gap-2">
                     <p className="font-medium">{i + 1}枚目の画像プロンプト</p>
-                    <button className="rounded bg-emerald-700 px-2 py-1 text-xs text-white" onClick={() => navigator.clipboard.writeText(prompt)}>このプロンプトをコピー</button>
+                    <button className="rounded bg-emerald-700 px-2 py-1 text-xs text-white" onClick={() => navigator.clipboard.writeText(prompt)}>{`${i + 1}枚目のプロンプトをコピー`}</button>
                   </div>
                   <pre className="whitespace-pre-wrap break-words text-xs">{prompt}</pre>
                 </div>
