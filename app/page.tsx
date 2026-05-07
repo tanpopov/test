@@ -68,9 +68,10 @@ function generateDraft(themeInput: ThemeInput, products: Product[]): GeneratedDr
       : `${vegetable}の扱い方で仕上がりが変わる`;
 
   const intent = { vegetable, action, purpose, worry, category };
+  const isCabbageSweetCut = /キャベツ/.test(rawTheme) && /甘くなる|甘く/.test(rawTheme) && /切る|切り方/.test(rawTheme);
 
   let carousel;
-  if (intent.category === "切り方" && /甘く/.test(rawTheme)) {
+  if (isCabbageSweetCut) {
     carousel = [
       { title: "1枚目：フック", body: `${vegetable}\n切り方で甘さ変わる` },
       { title: "2枚目：よくある失敗", body: "全部細切り\nベチャつきやすい" },
@@ -94,11 +95,9 @@ function generateDraft(themeInput: ThemeInput, products: Product[]): GeneratedDr
     carousel = [
       { title: "1枚目：フック", body: `${vegetable}
 ${intent.purpose}` },
-      { title: "2枚目：よくある失敗", body: `切り方しだいで
-仕上がりが変わる` },
-      { title: "3枚目：原因", body: `${intent.worry}
-小さな差が出る` },
-      { title: "4枚目：解決策", body: "手順をそろえる\n食感をそろえる" },
+      { title: "2枚目：よくある失敗", body: "同じ切り方だけ\n続けてしまう" },
+      { title: "3枚目：原因", body: "部位で厚みが違う\n火入りに差が出る" },
+      { title: "4枚目：解決策", body: "厚い部分は薄切り\n葉はざく切り" },
       { title: "5枚目：保存CTA＋商品導線", body: `あとで保存
 ${intent.purpose}` },
     ];
@@ -110,12 +109,12 @@ ${intent.purpose}` },
       ? `${vegetable}, storage container, refrigerator, freshness care`
       : `${vegetable}, Japanese home kitchen, cooking process`;
 
-  const imagePrompts = intent.category === "切り方" && /甘く/.test(rawTheme)
+  const imagePrompts = isCabbageSweetCut
     ? [
         `Instagram carousel slide 1, close-up of fresh ${vegetable} cut surface on cutting board, kitchen knife beside it, realistic Japanese home kitchen, natural warm light, clean composition, strong scroll-stopping visual\nbold Japanese text:\n「${vegetable}」\n「切り方で甘さ変わる」\nhigh readability, vertical 4:5, typography space, friendly for Japanese women in their 30s`,
-        `Instagram carousel slide 2, overly thinly shredded ${vegetable} looking watery on a cutting board, clear failure visual, realistic Japanese home kitchen, natural light, clean composition\nbold Japanese text:\n「全部細切り」\n「ベチャつきやすい」\nhigh readability, vertical 4:5, typography space, friendly for Japanese women in their 30s`,
-        `Instagram carousel slide 3, close-up of ${vegetable} fibers and knife cutting across the grain, educational visual showing texture and direction, realistic ${vegetable}, clean kitchen background\nbold Japanese text:\n「繊維を断つと」\n「火が入りやすい」\nhigh readability, vertical 4:5, typography space, friendly for Japanese women in their 30s`,
-        `Instagram carousel slide 4, comparison of ${vegetable} core sliced thin and leaves cut roughly, two clear piles on cutting board, practical cooking tip visual, realistic Japanese kitchen\nbold Japanese text:\n「芯は薄切り」\n「葉はざく切り」\nhigh readability, vertical 4:5, typography space, friendly for Japanese women in their 30s`,
+        `Instagram carousel slide 2, cabbage cut too thin and starting to look watery on a cutting board, clear failure visual, realistic Japanese home kitchen, natural light, clean composition\nbold Japanese text:\n「全部細切り」\n「ベチャつきやすい」\nhigh readability, vertical 4:5, typography space, friendly for Japanese women in their 30s`,
+        `Instagram carousel slide 3, comparison of cabbage core and leaves, showing difference in thickness and heat penetration, realistic cabbage, educational cooking visual, clean kitchen background\nbold Japanese text:\n「繊維を断つと」\n「火が入りやすい」\nhigh readability, vertical 4:5, typography space, friendly for Japanese women in their 30s`,
+        `Instagram carousel slide 4, cabbage core sliced thin and leaves roughly chopped in two clear piles on cutting board, practical cooking tip visual, realistic Japanese kitchen\nbold Japanese text:\n「芯は薄切り」\n「葉はざく切り」\nhigh readability, vertical 4:5, typography space, friendly for Japanese women in their 30s`,
         `Instagram carousel slide 5, neatly prepared ${vegetable} ready for cooking, core thinly sliced and leaves roughly chopped, satisfying organized kitchen scene\nbold Japanese text:\n「あとで保存」\n「切り方で変わる」\nhigh readability, vertical 4:5, typography space, friendly for Japanese women in their 30s`,
       ]
     : carousel.map((slide, i) => {
@@ -128,9 +127,9 @@ ${intent.purpose}` },
         ].join("\n");
       });
 
-  const cta = intent.category === "切り方" && /甘く/.test(rawTheme)
+  const cta = isCabbageSweetCut
     ? "あとで見返すなら保存。\nキャベツは切り方で変わります。"
-    : picked ? `${vegetable}の${intent.category}で使いやすかった「${picked.name}」はプロフィールリンクから見られます。` : `${vegetable}の${intent.category}のコツを、まず保存して見返してください。`;
+    : picked ? `${vegetable}の${intent.category}で使いやすかった「${picked.name}」はプロフィールリンクから見られます。` : `${vegetable}の${intent.category}は、まず保存して見返してください。`;
   const caption = intent.category === "切り方" && /甘く/.test(rawTheme)
     ? [
         `${vegetable}は、芯と葉で火の通り方が違います。`,
@@ -139,13 +138,13 @@ ${intent.purpose}` },
         "これだけで、炒め物やスープの食感がそろいやすくなります。",
         "あとで見返すなら保存してください。",
         PR_LABEL,
-        `#${vegetable} #料理のコツ #野菜保存 #時短ごはん #自炊`,
+        `#${vegetable} #料理のコツ #時短ごはん #自炊`,
       ].join("\n\n")
     : [
         `${vegetable}の「${intent.category}」を5枚で短くまとめました。`,
         `悩み: ${intent.worry}`,
         `行動: ${intent.action} / 目的: ${intent.purpose}`,
-        picked ? `最後に、使いやすかった「${picked.name}」を自然に紹介しています。` : "最後に、関連アイテムも紹介しています。",
+        picked ? `最後に、使いやすかった「${picked.name}」を自然に紹介しています。` : "最後に、使いやすい道具を紹介しています。",
         PR_LABEL,
         `#${vegetable} #料理のコツ #時短ごはん #自炊`,
       ].join("\n\n");
