@@ -44,34 +44,34 @@ function generateDraft(themeInput: ThemeInput, products: Product[]): GeneratedDr
         : has.select
           ? "選び方"
           : has.taste
-            ? "味を良くする"
+            ? "切り方"
             : has.rot
               ? "傷み対策"
               : has.quick
                 ? "時短"
-                : "味を良くする";
+                 : "切り方";
 
   const action = has.cut ? "切る" : has.heat ? "加熱する" : has.save ? "保存する" : has.select ? "選ぶ" : "調理する";
   const purpose = /甘く/.test(rawTheme)
     ? "甘くする"
     : has.taste
-      ? "味を良くする"
+      ? "切り方"
       : has.save
         ? "長持ちさせる"
         : has.quick
           ? "時短にする"
-          : "おいしくする";
+          : "甘さを引き出す";
   const worry = has.cut && /甘く/.test(rawTheme)
     ? "切り方で味が変わる"
     : has.save
       ? `${vegetable}の保存で傷みやすい`
-      : `${vegetable}の扱い方で仕上がりが変わる`;
+      : `${vegetable}は部位ごとに火入りが変わる`;
 
   const intent = { vegetable, action, purpose, worry, category };
-  const isCabbageSweetCut = /キャベツ/.test(rawTheme) && /甘くなる|甘く/.test(rawTheme) && /切る|切り方/.test(rawTheme);
+  const isCabbageCut = /キャベツ/.test(rawTheme) && /切る|切り方/.test(rawTheme);
 
   let carousel;
-  if (isCabbageSweetCut) {
+  if (isCabbageCut) {
     carousel = [
       { title: "1枚目：フック", body: `${vegetable}\n切り方で甘さ変わる` },
       { title: "2枚目：よくある失敗", body: "全部細切り\nベチャつきやすい" },
@@ -109,7 +109,7 @@ ${intent.purpose}` },
       ? `${vegetable}, storage container, refrigerator, freshness care`
       : `${vegetable}, Japanese home kitchen, cooking process`;
 
-  const imagePrompts = isCabbageSweetCut
+  const imagePrompts = isCabbageCut
     ? [
         `Instagram carousel slide 1, close-up of fresh ${vegetable} cut surface on cutting board, kitchen knife beside it, realistic Japanese home kitchen, natural warm light, clean composition, strong scroll-stopping visual\nbold Japanese text:\n「${vegetable}」\n「切り方で甘さ変わる」\nhigh readability, vertical 4:5, typography space, friendly for Japanese women in their 30s`,
         `Instagram carousel slide 2, cabbage cut too thin and starting to look watery on a cutting board, clear failure visual, realistic Japanese home kitchen, natural light, clean composition\nbold Japanese text:\n「全部細切り」\n「ベチャつきやすい」\nhigh readability, vertical 4:5, typography space, friendly for Japanese women in their 30s`,
@@ -127,14 +127,14 @@ ${intent.purpose}` },
         ].join("\n");
       });
 
-  const cta = isCabbageSweetCut
+  const cta = isCabbageCut
     ? "あとで見返すなら保存。\nキャベツは切り方で変わります。"
-    : picked ? `${vegetable}の${intent.category}で使いやすかった「${picked.name}」はプロフィールリンクから見られます。` : `${vegetable}の${intent.category}は、まず保存して見返してください。`;
-  const caption = intent.category === "切り方" && /甘く/.test(rawTheme)
+    : picked ? `${vegetable}の${intent.category}で使いやすかった「${picked.name}」はプロフィールリンクから見られます。` : `${vegetable}の${intent.category}投稿は、まず保存して見返してください。`;
+  const caption = isCabbageCut
     ? [
-        `${vegetable}は、芯と葉で火の通り方が違います。`,
-        "全部同じ細さに切ると、葉は先にしんなりして、芯は硬く残りやすいです。",
-        "だから、芯は薄切り。\n葉はざく切り。",
+        `${vegetable}は、部位によって厚みが違います。`,
+        "全部同じ切り方にすると、葉は先にしんなりして、芯や厚い部分は硬く残りやすいです。",
+        "だから、厚い部分は薄切り。\n葉はざく切り。",
         "これだけで、炒め物やスープの食感がそろいやすくなります。",
         "あとで見返すなら保存してください。",
         PR_LABEL,
