@@ -17,6 +17,7 @@ const initialTheme: ThemeInput = {
 const emptyProduct: Product = { id: "", name: "", genre: "", concern: "", affiliateUrl: "", memo: "" };
 
 const isHttpsUrl = (url: string) => url.trim().startsWith("https://");
+const shortLine = (text: string, max = 12) => text.trim().slice(0, max);
 
 function generateDraft(themeInput: ThemeInput, products: Product[]): GeneratedDraft {
   const theme = themeInput.theme.trim() || "野菜の保存";
@@ -24,7 +25,7 @@ function generateDraft(themeInput: ThemeInput, products: Product[]): GeneratedDr
   const concern = picked?.concern?.trim() || "野菜がすぐ傷む";
 
   const hookLine1 = "袋のまま危険";
-  const hookLine2 = `${theme}NG`;
+  const hookLine2 = `${shortLine(theme, 9)}NG`;
 
   const carousel = [
     { title: "1枚目：フック", body: `${hookLine1}\n${hookLine2}` },
@@ -172,7 +173,7 @@ export default function Page() {
           </div>
           <div className="rounded-lg border bg-slate-50 p-3"><h3 className="font-semibold">Instagramキャプション</h3><pre className="mt-2 whitespace-pre-wrap break-words rounded border bg-white p-2">{draft.caption}</pre></div>
           <div className="rounded-lg border bg-slate-50 p-3"><h3 className="font-semibold">CTA</h3><p className="mt-2">{draft.cta}</p></div>
-          <div className="rounded-lg border bg-slate-50 p-3"><h3 className="font-semibold">使用するアフィリエイトリンク</h3>{draft.affiliateLink ? <div className="mt-2"><p className="font-medium">商品名: {draft.affiliateLink.name}</p><p className="mt-1 text-xs text-slate-500">URL</p><p className="break-words text-slate-700">{draft.affiliateLink.affiliateUrl}</p></div> : <p className="mt-2">未選択</p>}</div>
+          <div className="rounded-lg border bg-slate-50 p-3"><h3 className="font-semibold">使用するアフィリエイトリンク</h3>{draft.affiliateLink ? <div className="mt-2"><p className="font-medium">商品名: {draft.affiliateLink.name}</p><p className="mt-1 text-xs text-slate-500">URL</p><p className="break-words text-slate-700">{draft.affiliateLink.affiliateUrl}</p>{draft.affiliateLink.affiliateUrl.trim() && !isHttpsUrl(draft.affiliateLink.affiliateUrl) ? <p className="mt-1 text-xs text-amber-600">⚠️ https:// から始まっていません</p> : null}</div> : <p className="mt-2">未選択</p>}</div>
           <div className="rounded-lg border bg-slate-50 p-3"><h3 className="font-semibold">PR表記</h3><p className="mt-2">{draft.prLabel}</p></div>
           <div className="grid gap-2 sm:grid-cols-2">
             <button className="rounded bg-emerald-700 px-3 py-2 text-white" onClick={() => navigator.clipboard.writeText(carouselText)}>カルーセル文字だけコピー</button>
