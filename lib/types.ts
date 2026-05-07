@@ -14,11 +14,13 @@ export type ThemeInput = {
   tone: string;
 };
 
+export type CarouselSlide = {
+  title: string;
+  body: string;
+};
+
 export type GeneratedDraft = {
-  carousel: {
-    title: string;
-    body: string;
-  }[];
+  carousel: CarouselSlide[];
   imagePrompts: string[];
   caption: string;
   cta: string;
