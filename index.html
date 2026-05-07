@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Instagramアフィリエイト投稿メーカー</title>
+    <style>
+      :root{--bg:#f6f8f6;--card:#fff;--text:#1e2a1f;--muted:#5f6f61;--accent:#2f8f4e;--border:#dce6dc;--warn:#b56a00}
+      *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text);font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif}
+      .wrap{max-width:860px;margin:0 auto;padding:12px}.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px}
+      h1{font-size:1.35rem;margin:8px 0 14px} h2{font-size:1.06rem;margin:0 0 10px}
+      .grid{display:grid;gap:8px}.two{display:grid;gap:8px}.btn{border:0;border-radius:10px;padding:10px 12px;cursor:pointer}.primary{background:var(--accent);color:#fff;font-weight:700}
+      .sub{background:#e8f5eb;color:#1f6f39}.danger{background:#ffe8e8;color:#9f2f2f}.small{font-size:.8rem;color:var(--muted)}
+      input,textarea{width:100%;padding:10px;border:1px solid var(--border);border-radius:10px;font:inherit}textarea{min-height:72px}
+      .warn{color:var(--warn);font-size:.8rem}.mono{font-family:ui-monospace,monospace}.break{overflow-wrap:anywhere}.actions{display:flex;gap:8px;flex-wrap:wrap}
+      .slide{background:#f9fbf9;border:1px solid var(--border);border-radius:10px;padding:10px;margin-top:8px}
+      @media (min-width:700px){.two{grid-template-columns:1fr 1fr}}
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <h1>Instagramアフィリエイト投稿メーカー</h1>
+      <section class="card">
+        <h2>1. 投稿テーマ入力</h2>
+        <input id="theme" placeholder="投稿テーマ（例: キャベツ 保存）" />
+      </section>
+      <section class="card">
+        <h2>2. アフィリエイト商品登録</h2>
+        <div class="grid two">
+          <input id="name" placeholder="商品名" />
+          <input id="genre" placeholder="ジャンル" />
+          <input id="concern" placeholder="悩み" />
+          <div>
+            <input id="url" placeholder="アフィリエイトURL" />
+            <p id="urlWarn" class="warn" hidden>URLは https:// から始めてください。</p>
+          </div>
+          <textarea id="memo" class="two" placeholder="メモ"></textarea>
+        </div>
+        <div class="actions" style="margin-top:8px">
+          <button id="saveProduct" class="btn primary">商品を追加</button>
+        </div>
+        <div id="productList" class="grid" style="margin-top:10px"></div>
+      </section>
+      <section class="card">
+        <h2>3. 投稿案生成</h2>
+        <button id="gen" class="btn primary">投稿案を生成する</button>
+      </section>
+      <section class="card">
+        <h2>4. 完成投稿コピー</h2>
+        <div id="result" class="small">先に投稿案を生成してください。</div>
+      </section>
+    </main>
+    <script src="./app.js"></script>
+  </body>
+</html>
