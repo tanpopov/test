@@ -74,8 +74,8 @@ function generateDraft(themeInput: ThemeInput, products: Product[]): GeneratedDr
     carousel = [
       { title: "1枚目：フック", body: `${vegetable}
 切り方で甘い` },
-      { title: "2枚目：よくある失敗", body: "細く切るほど\n火が通りやすい" },
-      { title: "3枚目：原因", body: "繊維を断つと\n食感がやわらぐ" },
+      { title: "2枚目：よくある失敗", body: "全部同じ幅\n切ってませんか？" },
+      { title: "3枚目：原因", body: "芯と葉では\n火の通りが違う" },
       { title: "4枚目：解決策", body: "芯は薄切り\n葉はざく切り" },
       { title: "5枚目：保存CTA＋商品導線", body: picked ? `あとで保存
 切り方で変わる` : `あとで保存
