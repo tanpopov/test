@@ -68,10 +68,10 @@ function generateDraft(themeInput: ThemeInput, products: Product[]): GeneratedDr
       : `${vegetable}は部位ごとに火入りが変わる`;
 
   const intent = { vegetable, action, purpose, worry, category };
-  const isCabbageCut = /キャベツ/.test(rawTheme) && /切る|切り方/.test(rawTheme);
+  const isCabbageTheme = /キャベツ/.test(rawTheme);
 
   let carousel;
-  if (isCabbageCut) {
+  if (isCabbageTheme) {
     carousel = [
       { title: "1枚目：フック", body: `${vegetable}\n切り方で甘さ変わる` },
       { title: "2枚目：よくある失敗", body: "全部細切り\nベチャつきやすい" },
@@ -109,13 +109,13 @@ ${intent.purpose}` },
       ? `${vegetable}, storage container, refrigerator, freshness care`
       : `${vegetable}, Japanese home kitchen, cooking process`;
 
-  const imagePrompts = isCabbageCut
+  const imagePrompts = isCabbageTheme
     ? [
         `Instagram carousel slide 1, close-up of fresh ${vegetable} cut surface on cutting board, kitchen knife beside it, realistic Japanese home kitchen, natural warm light, clean composition, strong scroll-stopping visual\nbold Japanese text:\n「${vegetable}」\n「切り方で甘さ変わる」\nhigh readability, vertical 4:5, typography space, friendly for Japanese women in their 30s`,
-        `Instagram carousel slide 2, cabbage cut too thin and starting to look watery on a cutting board, clear failure visual, realistic Japanese home kitchen, natural light, clean composition\nbold Japanese text:\n「全部細切り」\n「ベチャつきやすい」\nhigh readability, vertical 4:5, typography space, friendly for Japanese women in their 30s`,
-        `Instagram carousel slide 3, comparison of cabbage core and leaves, showing difference in thickness and heat penetration, realistic cabbage, educational cooking visual, clean kitchen background\nbold Japanese text:\n「繊維を断つと」\n「火が入りやすい」\nhigh readability, vertical 4:5, typography space, friendly for Japanese women in their 30s`,
-        `Instagram carousel slide 4, cabbage core sliced thin and leaves roughly chopped in two clear piles on cutting board, practical cooking tip visual, realistic Japanese kitchen\nbold Japanese text:\n「芯は薄切り」\n「葉はざく切り」\nhigh readability, vertical 4:5, typography space, friendly for Japanese women in their 30s`,
-        `Instagram carousel slide 5, neatly prepared ${vegetable} ready for cooking, core thinly sliced and leaves roughly chopped, satisfying organized kitchen scene\nbold Japanese text:\n「あとで保存」\n「切り方で変わる」\nhigh readability, vertical 4:5, typography space, friendly for Japanese women in their 30s`,
+        `Instagram carousel slide 2, cabbage cut too thin and starting to look watery on a cutting board, repeating same cut style, clear failure visual, realistic Japanese home kitchen, natural light, clean composition\nbold Japanese text:\n「全部細切り」\n「ベチャつきやすい」\nhigh readability, vertical 4:5, typography space, friendly for Japanese women in their 30s`,
+        `Instagram carousel slide 3, comparison of cabbage core and leaves, clear thickness difference and heat penetration contrast, realistic cabbage, educational cooking visual, clean kitchen background\nbold Japanese text:\n「繊維を断つと」\n「火が入りやすい」\nhigh readability, vertical 4:5, typography space, friendly for Japanese women in their 30s`,
+        `Instagram carousel slide 4, thick cabbage parts sliced thin and leaves roughly chopped in two clear piles on cutting board, practical cooking tip visual, realistic Japanese kitchen\nbold Japanese text:\n「芯は薄切り」\n「葉はざく切り」\nhigh readability, vertical 4:5, typography space, friendly for Japanese women in their 30s`,
+        `Instagram carousel slide 5, neatly arranged cut cabbage ready for cooking, thin-sliced thick parts and rough-chopped leaves aligned beautifully, save-worthy organized kitchen finish\nbold Japanese text:\n「あとで保存」\n「切り方で変わる」\nhigh readability, vertical 4:5, typography space, friendly for Japanese women in their 30s`,
       ]
     : carousel.map((slide, i) => {
         const slideTexts = slide.body.split("\n").map((line) => `「${line}」`).join("\n");
@@ -127,10 +127,10 @@ ${intent.purpose}` },
         ].join("\n");
       });
 
-  const cta = isCabbageCut
+  const cta = isCabbageTheme
     ? "あとで見返すなら保存。\nキャベツは切り方で変わります。"
     : picked ? `${vegetable}の${intent.category}で使いやすかった「${picked.name}」はプロフィールリンクから見られます。` : `${vegetable}の${intent.category}投稿は、まず保存して見返してください。`;
-  const caption = isCabbageCut
+  const caption = isCabbageTheme
     ? [
         `${vegetable}は、部位によって厚みが違います。`,
         "全部同じ切り方にすると、葉は先にしんなりして、芯や厚い部分は硬く残りやすいです。",
