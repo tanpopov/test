@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { GeneratedDraft, Product, ThemeInput } from "@/lib/types";
+import { getVegetableKnowledge } from "@/lib/vegetableKnowledge";
 
 const PRODUCTS_KEY = "insta_aff_products_v2";
 const THEME_KEY = "insta_aff_theme_v1";
@@ -32,38 +33,23 @@ function generateDraft(themeInput: ThemeInput, products: Product[]): GeneratedDr
 
   const vegetableMatch = rawTheme.match(/(キャベツ|白菜|レタス|ほうれん草|小松菜|にんじん|人参|玉ねぎ|たまねぎ|じゃがいも|ピーマン|きゅうり|トマト|なす|大根|ブロッコリー|ねぎ|長ねぎ|もやし)/);
   const vegetable = vegetableMatch?.[0] || "野菜";
+  const knowledge = getVegetableKnowledge(vegetable);
 
   const has = {
-    save: /(保存|冷蔵|冷凍|袋)/.test(rawTheme),
+    save: /(保存|冷蔵|冷凍|袋|長持ち|傷む|腐る)/.test(rawTheme),
     cut: /(切る|切り方|薄切り|千切り|ざく切り|繊維|包丁)/.test(rawTheme),
-    heat: /(加熱|炒める|焼く|茹でる|蒸す|レンジ|火)/.test(rawTheme),
+    cook: /(食べ方|おいしい|調理|炒める|焼く|煮る|加熱|蒸す|レンジ)/.test(rawTheme),
     select: /(選び方|見分け|新鮮|買い方)/.test(rawTheme),
-    taste: /(甘く|おいしく|味|うまみ|食感)/.test(rawTheme),
-    rot: /(傷み|腐る|悪くなる)/.test(rawTheme),
     quick: /(時短|すぐ|簡単)/.test(rawTheme),
   };
 
-  const category = has.save
-    ? "保存"
-    : has.cut
-      ? "切り方"
-      : has.heat
-        ? "加熱"
-        : has.select
-          ? "選び方"
-          : has.taste
-            ? "切り方"
-            : has.rot
-              ? "傷み対策"
-              : has.quick
-                ? "時短"
-                 : "切り方";
+  const category = has.cut ? "切り方" : has.save ? "保存" : has.cook ? "調理" : has.select ? "選び方" : "調理";
 
-  const action = has.cut ? "切る" : has.heat ? "加熱する" : has.save ? "保存する" : has.select ? "選ぶ" : "調理する";
+  const action = has.cut ? "切る" : has.save ? "保存する" : has.select ? "選ぶ" : "調理する";
   const purpose = /甘く/.test(rawTheme)
     ? "甘くする"
-    : has.taste
-      ? "切り方"
+    : has.cook
+      ? "おいしく食べる"
       : has.save
         ? "長持ちさせる"
         : has.quick
