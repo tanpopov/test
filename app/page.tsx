@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { GeneratedDraft, Product, ThemeInput } from "@/lib/types";
-import { getVegetableKnowledge } from "@/lib/vegetableKnowledge";
+import { normalizeVegetable, detectTopicType, getVegetableMaster, buildCarouselFromMaster, buildImagePromptsFromMaster, buildCaptionFromMaster, validateDraftConsistency } from "@/lib/vegetableMaster";
 
 const PRODUCTS_KEY = "insta_aff_products_v2";
 const THEME_KEY = "insta_aff_theme_v1";
@@ -20,130 +20,29 @@ const emptyProduct: Product = { id: "", name: "", genre: "", concern: "", affili
 const isHttpsUrl = (url: string) => url.trim().startsWith("https://");
 
 
-const buildPrompt = (slideNumber: number, scene: string, lines: string[]) => [
-  `Instagram carousel slide ${slideNumber}, ${scene}`,
-  `vertical 4:5, 1080x1350, ultra realistic, realistic Japanese home kitchen, natural warm light or warm cinematic light, clean composition, clear main subject, text space, high readability, friendly for Japanese women in their 30s`,
-  `bold Japanese text, extremely large white text, thick black outline:`,
-  ...lines.map((line) => `「${line}」`),
-].join("\n");
 
 function generateDraft(themeInput: ThemeInput, products: Product[]): GeneratedDraft {
   const rawTheme = themeInput.theme.trim();
   const picked = products[0] ?? null;
-
-  const vegetableMatch = rawTheme.match(/(キャベツ|白菜|レタス|ほうれん草|小松菜|にんじん|人参|玉ねぎ|たまねぎ|じゃがいも|ピーマン|きゅうり|トマト|なす|大根|ブロッコリー|ねぎ|長ねぎ|もやし)/);
-  const vegetable = vegetableMatch?.[0] || "野菜";
-  const knowledge = getVegetableKnowledge(vegetable);
-
-  const has = {
-    save: /(保存|冷蔵|冷凍|袋|長持ち|傷む|腐る)/.test(rawTheme),
-    cut: /(切る|切り方|薄切り|千切り|ざく切り|繊維|包丁)/.test(rawTheme),
-    cook: /(食べ方|おいしい|調理|炒める|焼く|煮る|加熱|蒸す|レンジ)/.test(rawTheme),
-    select: /(選び方|見分け|新鮮|買い方)/.test(rawTheme),
-    quick: /(時短|すぐ|簡単)/.test(rawTheme),
-  };
-
-  const category = has.cut ? "切り方" : has.save ? "保存" : has.cook ? "調理" : has.select ? "選び方" : "調理";
-
-  const action = has.cut ? "切る" : has.save ? "保存する" : has.select ? "選ぶ" : "調理する";
-  const purpose = /甘く/.test(rawTheme)
-    ? "甘くする"
-    : has.cook
-      ? "おいしく食べる"
-      : has.save
-        ? "長持ちさせる"
-        : has.quick
-          ? "時短にする"
-          : "甘さを引き出す";
-  const worry = has.cut && /甘く/.test(rawTheme)
-    ? "切り方で味が変わる"
-    : has.save
-      ? `${vegetable}の保存で傷みやすい`
-      : `${vegetable}は部位ごとに火入りが変わる`;
-
-  const intent = { vegetable, action, purpose, worry, category };
-  const isCabbageTheme = /キャベツ/.test(rawTheme);
-
-  let carousel;
-  if (isCabbageTheme) {
-    carousel = [
-      { title: "1枚目：フック", body: `${vegetable}\n切り方で甘さ変わる` },
-      { title: "2枚目：よくある失敗", body: "全部細切り\nベチャつきやすい" },
-      { title: "3枚目：原因", body: "繊維を断つと\n火が入りやすい" },
-      { title: "4枚目：解決策", body: "芯は薄切り\n葉はざく切り" },
-      { title: "5枚目：保存CTA＋商品導線", body: picked ? `あとで保存
-切り方で変わる` : `あとで保存
-切り方で変わる` },
-    ];
-  } else if (intent.category === "保存" || intent.category === "傷み対策") {
-    carousel = [
-      { title: "1枚目：フック", body: `${vegetable}
-傷みやすい理由` },
-      { title: "2枚目：よくある失敗", body: "その保存NG\n劣化が早い" },
-      { title: "3枚目：原因", body: "水分と温度差で\n傷みが進む" },
-      { title: "4枚目：解決策", body: "乾かして小分け\n冷蔵を一定に" },
-      { title: "5枚目：保存CTA＋商品導線", body: `${vegetable}対策を保存
-最後に道具を紹介` },
-    ];
-  } else {
-    carousel = [
-      { title: "1枚目：フック", body: `${vegetable}
-${intent.purpose}` },
-      { title: "2枚目：よくある失敗", body: "同じ切り方だけ\n続けてしまう" },
-      { title: "3枚目：原因", body: "部位で厚みが違う\n火入りに差が出る" },
-      { title: "4枚目：解決策", body: "厚い部分は薄切り\n葉はざく切り" },
-      { title: "5枚目：保存CTA＋商品導線", body: `あとで保存
-${intent.purpose}` },
-    ];
+  const vegKey = normalizeVegetable(rawTheme) || "キャベツ";
+  const topicType = detectTopicType(rawTheme);
+  const master = getVegetableMaster(vegKey);
+  if (!master) {
+    throw new Error(`master not found: ${vegKey}`);
   }
 
-  const visualHint = intent.category === "切り方"
-    ? `${vegetable}断面, kitchen knife, cutting board, slicing technique`
-    : intent.category === "保存" || intent.category === "傷み対策"
-      ? `${vegetable}, storage container, refrigerator, freshness care`
-      : `${vegetable}, Japanese home kitchen, cooking process`;
+  const carousel = buildCarouselFromMaster(master, topicType);
+  const imagePrompts = buildImagePromptsFromMaster(master, topicType);
+  validateDraftConsistency(master, topicType, carousel, imagePrompts);
 
-  const imagePrompts = isCabbageTheme
-    ? [
-        buildPrompt(1, `close-up of fresh ${vegetable} cut surface on cutting board, kitchen knife beside it, strong scroll-stopping hook visual`, [vegetable, "切り方で甘さ変わる"]),
-        buildPrompt(2, `cabbage cut too thin and starting to look watery on a cutting board, repeating same cut style, clear mistake visual`, ["全部細切り", "ベチャつきやすい"]),
-        buildPrompt(3, `comparison of cabbage core and leaves, clear thickness difference and heat penetration contrast, educational cooking visual`, ["繊維を断つと", "火が入りやすい"]),
-        buildPrompt(4, `thick cabbage parts sliced thin and leaves roughly chopped in two clear piles on cutting board, practical cooking tip demonstration`, ["芯は薄切り", "葉はざく切り"]),
-        buildPrompt(5, `neatly arranged cut cabbage ready for cooking, thin-sliced thick parts and rough-chopped leaves aligned beautifully, save-worthy finish`, ["あとで保存", "切り方で変わる"]),
-      ]
-    : carousel.map((slide, i) => {
-        const lines = slide.body.split("\n");
-        const sceneByRole = [
-          `${vegetable} hero shot for hook, strong focus composition`,
-          `${vegetable} common mistake moment in cooking prep`,
-          `${vegetable} cause explanation visual with clear comparison`,
-          `${vegetable} actionable solution demonstration on cutting board`,
-          `${vegetable} finished prep scene for save CTA and product lead-in`,
-        ];
-        return buildPrompt(i + 1, sceneByRole[i] || `${vegetable} cooking scene`, lines);
-      });
+  const caption = [
+    buildCaptionFromMaster(master, topicType),
+    picked ? `最後に、使いやすかった「${picked.name}」を自然に紹介しています。` : "最後に、使いやすい道具を紹介しています。",
+    PR_LABEL,
+    `#${master.key} #料理のコツ #時短ごはん #自炊`,
+  ].join("\n\n");
 
-  const cta = isCabbageTheme
-    ? "あとで見返すなら保存。\nキャベツは切り方で変わります。"
-    : picked ? `${vegetable}の${intent.category}で使いやすかった「${picked.name}」はプロフィールリンクから見られます。` : `${vegetable}の${intent.category}投稿は、まず保存して見返してください。`;
-  const caption = isCabbageTheme
-    ? [
-        `${vegetable}は、部位によって厚みが違います。`,
-        "全部同じ切り方にすると、葉は先にしんなりして、芯や厚い部分は硬く残りやすいです。",
-        "だから、厚い部分は薄切り。\n葉はざく切り。",
-        "これだけで、炒め物やスープの食感がそろいやすくなります。",
-        "あとで見返すなら保存してください。",
-        PR_LABEL,
-        `#${vegetable} #料理のコツ #時短ごはん #自炊`,
-      ].join("\n\n")
-    : [
-        `${vegetable}の「${intent.category}」を5枚で短くまとめました。`,
-        `悩み: ${intent.worry}`,
-        `行動: ${intent.action} / 目的: ${intent.purpose}`,
-        picked ? `最後に、使いやすかった「${picked.name}」を自然に紹介しています。` : "最後に、使いやすい道具を紹介しています。",
-        PR_LABEL,
-        `#${vegetable} #料理のコツ #時短ごはん #自炊`,
-      ].join("\n\n");
+  const cta = master.topics[topicType].cta;
 
   return { carousel, imagePrompts, caption, cta, affiliateLink: picked, prLabel: PR_LABEL };
 }
