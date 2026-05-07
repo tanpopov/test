@@ -28,3 +28,7 @@ npm run dev
 
 ## Node.js要件
 - Next.js 16系のため Node.js 20.9+ を推奨（Vercelは通常自動で満たします）。
+
+## Vercelビルドエラー対策
+`No `pages` or `app` directory found` が出る場合は、Vercelの **Root Directory がリポジトリ直下** になっているか確認してください。
+このリポジトリでは `app/` を使用しています。
