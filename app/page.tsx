@@ -21,73 +21,121 @@ const isHttpsUrl = (url: string) => url.trim().startsWith("https://");
 function generateDraft(themeInput: ThemeInput, products: Product[]): GeneratedDraft {
   const rawTheme = themeInput.theme.trim();
   const picked = products[0] ?? null;
-  const concern = picked?.concern?.trim() || "野菜がすぐ傷む";
 
   const vegetableMatch = rawTheme.match(/(キャベツ|白菜|レタス|ほうれん草|小松菜|にんじん|人参|玉ねぎ|たまねぎ|じゃがいも|ピーマン|きゅうり|トマト|なす|大根|ブロッコリー|ねぎ|長ねぎ|もやし)/);
   const vegetable = vegetableMatch?.[0] || "野菜";
 
-  const hasBag = rawTheme.includes("袋");
-  const hasStorage = /(保存|冷蔵|冷凍)/.test(rawTheme);
-  const hasCutWash = /(切る|洗う)/.test(rawTheme);
+  const has = {
+    save: /(保存|冷蔵|冷凍|袋)/.test(rawTheme),
+    cut: /(切る|切り方|薄切り|千切り|ざく切り|繊維|包丁)/.test(rawTheme),
+    heat: /(加熱|炒める|焼く|茹でる|蒸す|レンジ|火)/.test(rawTheme),
+    select: /(選び方|見分け|新鮮|買い方)/.test(rawTheme),
+    taste: /(甘く|おいしく|味|うまみ|食感)/.test(rawTheme),
+    rot: /(傷み|腐る|悪くなる)/.test(rawTheme),
+    quick: /(時短|すぐ|簡単)/.test(rawTheme),
+  };
 
-  const normalizedTheme = rawTheme
-    ? rawTheme
-    : `${vegetable}が傷みやすい理由`;
+  const category = has.save
+    ? "保存"
+    : has.cut
+      ? "切り方"
+      : has.heat
+        ? "加熱"
+        : has.select
+          ? "選び方"
+          : has.taste
+            ? "味を良くする"
+            : has.rot
+              ? "傷み対策"
+              : has.quick
+                ? "時短"
+                : "味を良くする";
 
-  const fallbackTheme = `${vegetable}が傷みやすい理由`;
-  const effectiveTheme = hasBag || hasStorage || hasCutWash ? normalizedTheme : fallbackTheme;
+  const action = has.cut ? "切る" : has.heat ? "加熱する" : has.save ? "保存する" : has.select ? "選ぶ" : "調理する";
+  const purpose = /甘く/.test(rawTheme)
+    ? "甘くする"
+    : has.taste
+      ? "味を良くする"
+      : has.save
+        ? "長持ちさせる"
+        : has.quick
+          ? "時短にする"
+          : "おいしくする";
+  const worry = has.cut && /甘く/.test(rawTheme)
+    ? "切り方で味が変わる"
+    : has.save
+      ? `${vegetable}の保存で傷みやすい`
+      : `${vegetable}の扱い方で仕上がりが変わる`;
 
-  const hookLine1 = vegetable;
-  const hookLine2 = rawTheme.includes("悪い") || !rawTheme ? "すぐ悪くなる" : "傷みやすい理由";
+  const intent = { vegetable, action, purpose, worry, category };
 
-  const failLine = hasBag
-    ? "袋のままNG"
-    : hasStorage
-      ? "冷蔵のままNG"
-      : hasCutWash
-        ? "切り方・洗い方NG"
-        : `${vegetable}保存NG`;
+  let carousel;
+  if (intent.category === "切り方" && /甘く/.test(rawTheme)) {
+    carousel = [
+      { title: "1枚目：フック", body: `${vegetable}
+切り方で甘い` },
+      { title: "2枚目：よくある失敗", body: "細く切るほど
+火が通りやすい" },
+      { title: "3枚目：原因", body: "繊維を断つと
+食感がやわらぐ" },
+      { title: "4枚目：解決策", body: "芯は薄切り
+葉はざく切り" },
+      { title: "5枚目：保存CTA＋商品導線", body: picked ? `あとで保存
+切り方で変わる` : `あとで保存
+切り方で変わる` },
+    ];
+  } else if (intent.category === "保存" || intent.category === "傷み対策") {
+    carousel = [
+      { title: "1枚目：フック", body: `${vegetable}
+傷みやすい理由` },
+      { title: "2枚目：よくある失敗", body: "その保存NG
+劣化が早い" },
+      { title: "3枚目：原因", body: "水分と温度差で
+傷みが進む" },
+      { title: "4枚目：解決策", body: "乾かして小分け
+冷蔵を一定に" },
+      { title: "5枚目：保存CTA＋商品導線", body: `${vegetable}対策を保存
+最後に道具を紹介` },
+    ];
+  } else {
+    carousel = [
+      { title: "1枚目：フック", body: `${vegetable}
+${intent.purpose}` },
+      { title: "2枚目：よくある失敗", body: `${intent.action}方しだいで
+仕上がりが変わる` },
+      { title: "3枚目：原因", body: `${intent.worry}
+小さな差が出る` },
+      { title: "4枚目：解決策", body: "手順をそろえる
+食感をそろえる" },
+      { title: "5枚目：保存CTA＋商品導線", body: `あとで保存
+${intent.purpose}` },
+    ];
+  }
 
-  const causeLine = hasCutWash ? "水分が残る" : `${vegetable}は水分に弱い`;
-  const fixLine = hasCutWash ? "洗った後よく乾かす" : "乾かして小分け保存";
-
-  const carousel = [
-    { title: "1枚目：フック", body: `${hookLine1}
-${hookLine2}` },
-    { title: "2枚目：よくある失敗", body: `${failLine}
-傷みが早い` },
-    { title: "3枚目：原因", body: `${causeLine}
-温度差で劣化` },
-    { title: "4枚目：解決策", body: `${fixLine}
-冷蔵室を一定に` },
-    { title: "5枚目：保存CTA＋商品導線", body: picked ? `${vegetable}対策を保存
-最後に${picked.name}を紹介` : `${vegetable}対策を保存
-使いやすい道具を紹介` },
-  ];
+  const visualHint = intent.category === "切り方"
+    ? `${vegetable}断面, kitchen knife, cutting board, slicing technique`
+    : intent.category === "保存" || intent.category === "傷み対策"
+      ? `${vegetable}, storage container, refrigerator, freshness care`
+      : `${vegetable}, Japanese home kitchen, cooking process`;
 
   const imagePrompts = carousel.map((slide, i) => {
-    const slideTexts = slide.body
-      .split("\n")
-      .map((line) => `「${line}」`)
-      .join("\n");
-
+    const slideTexts = slide.body.split("\n").map((line) => `「${line}」`).join("\n");
     return [
-      `Instagram carousel slide ${i + 1}, ${vegetable}, Japanese home kitchen, realistic ${vegetable}, natural light, clean composition`,
+      `Instagram carousel slide ${i + 1}, ${visualHint}, realistic ${vegetable}, natural light, clean composition`,
       `bold Japanese text:`,
       slideTexts,
       `high readability, vertical 4:5, typography space, friendly for Japanese women in their 30s`,
     ].join("\n");
   });
 
-  const cta = `${vegetable}の保存に使いやすかったアイテムは、プロフィールのリンクから見られます。`;
-
+  const cta = picked ? `${vegetable}の${intent.category}で使いやすかった「${picked.name}」はプロフィールリンクから見られます。` : `${vegetable}の${intent.category}のコツを、まず保存して見返してください。`;
   const caption = [
-    `${effectiveTheme}を、5枚で短くまとめました。`,
-    `今日は「${concern}」を先に解決する内容です。`,
-    `${vegetable}は水分と温度差の管理で、傷みにくくできます。`,
-    picked ? `最後に、使いやすかった「${picked.name}」をそっと紹介しています。` : "最後に、関連アイテムも紹介しています。",
+    `${vegetable}の「${intent.category}」を5枚で短くまとめました。`,
+    `悩み: ${intent.worry}`,
+    `行動: ${intent.action} / 目的: ${intent.purpose}`,
+    picked ? `最後に、使いやすかった「${picked.name}」を自然に紹介しています。` : "最後に、関連アイテムも紹介しています。",
     PR_LABEL,
-    `#${vegetable} #野菜保存 #時短ごはん #料理のコツ #自炊`,
+    `#${vegetable} #料理のコツ #時短ごはん #自炊`,
   ].join("\n\n");
 
   return { carousel, imagePrompts, caption, cta, affiliateLink: picked, prLabel: PR_LABEL };
